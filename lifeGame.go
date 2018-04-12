@@ -20,8 +20,10 @@ func rule() int {
 func main() {
 	lifeGame := LifeGame{}
 	lifeGame.fileOpen()
-	lifeGame.nextGeneration()
-	lifeGame.print2dGRID()
+	for i := 0; i < 100; i++ {
+		lifeGame.nextGeneration()
+		lifeGame.print2dGRID()
+	}
 }
 func (lifeGame *LifeGame) print2dGRID() {
 	for _, _1dGRID := range lifeGame._2dGRID {
@@ -34,8 +36,8 @@ func (lifeGame *LifeGame) print2dGRID() {
 }
 
 func (lifeGame *LifeGame) nextGeneration() {
-	for i := 1; i < len(lifeGame._2dGRID)-1; i++ {
-		for j := 1; j < len(lifeGame._2dGRID[i])-1; j++ {
+	for i := 0; i < len(lifeGame._2dGRID); i++ {
+		for j := 0; j < len(lifeGame._2dGRID[i]); j++ {
 			sub2DGRID := lifeGame.makeSub2dGRID(i, j)
 
 			sumValue := sumAroundCellValues(sub2DGRID)
@@ -86,10 +88,36 @@ func sumAroundCellValues(aroundCells [][]int) int {
 }
 
 func (lifeGame *LifeGame) makeSub2dGRID(pointX int, pointY int) [][]int {
-	sub2DGRID := [][]int{}
-	for _, _1dGRID := range lifeGame._2dGRID[pointX-1 : pointX+1+1] {
-		sub2DGRID = append(sub2DGRID, _1dGRID[pointY-1:pointY+1+1])
+	index := [3][3][2]int{}
+	for i := pointX - 1; i <= pointX+1; i++ {
+		for j := pointY - 1; j <= pointY+1; j++ {
+			index[i-pointX+1][j-pointY+1][0] = i
+			index[i-pointX+1][j-pointY+1][1] = j
+		}
 	}
+	sub2DGRID := [][]int{}
+	for i := 0; i < 3; i++ {
+		sub1DGRID := []int{}
+		for j := 0; j < 3; j++ {
+			if index[i][j][0] < 0 {
+				index[i][j][0] = len(lifeGame._2dGRID) - 1
+			}
+			if index[i][j][0] == len(lifeGame._2dGRID) {
+				index[i][j][0] = 0
+			}
+			if index[i][j][1] < 0 {
+				index[i][j][1] = len(lifeGame._2dGRID[i]) - 1
+			}
+			if index[i][j][1] == len(lifeGame._2dGRID[i]) {
+				index[i][j][1] = 0
+			}
+			x := index[i][j][0]
+			y := index[i][j][1]
+			sub1DGRID = append(sub1DGRID, lifeGame._2dGRID[x][y])
+		}
+		sub2DGRID = append(sub2DGRID, sub1DGRID)
+	}
+
 	return sub2DGRID
 }
 
