@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"time"
 )
 
 type LifeGame struct {
@@ -20,10 +21,13 @@ func rule() int {
 func main() {
 	lifeGame := LifeGame{}
 	lifeGame.fileOpen()
+	start := time.Now()
 	for i := 0; i < 100; i++ {
 		lifeGame.nextGeneration()
-		lifeGame.print2dGRID()
 	}
+	end := time.Now()
+	fmt.Printf("%f秒\n", (end.Sub(start)).Seconds())
+	//lifeGame.print2dGRID()
 }
 func (lifeGame *LifeGame) print2dGRID() {
 	for _, _1dGRID := range lifeGame._2dGRID {
