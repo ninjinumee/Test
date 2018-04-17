@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -14,16 +15,12 @@ type LifeGame struct {
 	_next2dGRID [][]int
 }
 
-func rule() int {
-	return 1
-}
-
 func main() {
 	lifeGame := LifeGame{}
 	lifeGame.fileOpen()
 	start := time.Now()
-	for i := 0; i < 100; i++ {
-		lifeGame.nextGeneration()
+	for i := 0; i < 4000; i++ {
+		lifeGame.nextGenerationMulti()
 	}
 	end := time.Now()
 	fmt.Printf("%f秒\n", (end.Sub(start)).Seconds())
@@ -43,7 +40,6 @@ func (lifeGame *LifeGame) nextGeneration() {
 	for i := 0; i < len(lifeGame._2dGRID); i++ {
 		for j := 0; j < len(lifeGame._2dGRID[i]); j++ {
 			sub2DGRID := lifeGame.makeSub2dGRID(i, j)
-
 			sumValue := sumAroundCellValues(sub2DGRID)
 			switch sub2DGRID[1][1] {
 			case 1: //自分が生存している場合
@@ -79,6 +75,54 @@ func (lifeGame *LifeGame) nextGeneration() {
 		lifeGame._2dGRID[i] = make([]int, len(lifeGame._2dGRID[i]))
 		copy(lifeGame._2dGRID[i], lifeGame._next2dGRID[i])
 	}
+}
+
+func (lifeGame *LifeGame) nextGenerationMulti() {
+	wg := new(sync.WaitGroup)
+	for i := 0; i < len(lifeGame._2dGRID); i++ {
+		for j := 0; j < len(lifeGame._2dGRID[i]); j++ {
+			wg.Add(1)
+			go func(x int, y int) {
+				defer wg.Done()
+				sub2DGRID := lifeGame.makeSub2dGRID(x, y)
+				sumValue := sumAroundCellValues(sub2DGRID)
+				switch sub2DGRID[1][1] {
+				case 1: //自分が生存している場合
+					switch sumValue {
+					case 0:
+					case 1:
+						//過疎
+						lifeGame._next2dGRID[x][y] = 0
+						break
+					case 2:
+					case 3:
+						//生存
+						break
+					default:
+						//過密
+						lifeGame._next2dGRID[x][y] = 0
+						break
+					}
+				case 0: //死亡している場合
+					switch sumValue {
+					case 3:
+						//誕生
+						lifeGame._next2dGRID[x][y] = 1
+						break
+					default:
+						break
+					}
+				}
+			}(i, j)
+
+		}
+	}
+	wg.Wait()
+	for i := 0; i < len(lifeGame._2dGRID); i++ {
+		lifeGame._2dGRID[i] = make([]int, len(lifeGame._2dGRID[i]))
+		copy(lifeGame._2dGRID[i], lifeGame._next2dGRID[i])
+	}
+
 }
 
 func sumAroundCellValues(aroundCells [][]int) int {
@@ -124,7 +168,6 @@ func (lifeGame *LifeGame) makeSub2dGRID(pointX int, pointY int) [][]int {
 
 	return sub2DGRID
 }
-
 func failOnError(err error) {
 	if err != nil {
 		log.Fatal("Error:", err)
